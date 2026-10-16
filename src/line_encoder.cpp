@@ -50,8 +50,8 @@ namespace encodeco{
     Levels levels;
     std::int8_t previous_second_half_level = INITIAL_DIFF_MANCHESTER_LEVEL; // which is +1
     for(const auto bit : bits){
-        std::int8_t level_first_half = 0;
-        std::int8_t level_second_half = 0;
+        std::int8_t level_first_half = ZERO_LEVEL;
+        std::int8_t level_second_half = ZERO_LEVEL;
       if(bit==0){
         // transition for zero
         level_first_half = -previous_second_half_level;
@@ -71,7 +71,7 @@ namespace encodeco{
     Levels levels;
     std::int8_t previous_one_polarity = INITIAL_AMI_PREVIOUS_PULSE_POLARITY;
     for(const auto bit: bits){
-        std::int8_t level = 0;
+        std::int8_t level = ZERO_LEVEL;
         if(bit==1){
             level = -previous_one_polarity;
             previous_one_polarity = level;
