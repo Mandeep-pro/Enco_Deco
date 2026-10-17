@@ -4,7 +4,6 @@
 #include "types.hpp"
 
 namespace encodeco{
-    Palindrome findLongestPalindrome(const Bits& bits);
-
+    Palindrome findLongestPalindrome(const Bits &bits);
 }
 #endif

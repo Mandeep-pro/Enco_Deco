@@ -13,6 +13,4 @@ namespace encodeco{
 
 
 
-
-
 #endif
