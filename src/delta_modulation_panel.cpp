@@ -21,13 +21,11 @@ constexpr int MAX_SAMPLES = 32;
 constexpr double DEFAULT_AMPLITUDE = 1.0;
 constexpr double DEFAULT_FREQUENCY = 1.0;
 constexpr double DEFAULT_SAMPLING_FREQUENCY = 16.0;
-constexpr double DEFAULT_STEP_SIZE = 0.2;
+constexpr double DEFAULT_STEP_SIZE = 0.4;
 
 // Local colors for this view.
 const Color ORIGINAL_COLOR{51, 65, 85, 255};      // slate-700
-const Color OVERLOAD_TINT{185, 28, 28, 36};
 const Color SAMPLE_GRID{148, 163, 184, 55};
-const Color WARNING_COLOR{180, 83, 9, 255};       // amber-700
 
 
 // Live regeneration: recompute only when a parameter actually changed.
@@ -98,15 +96,6 @@ void syncSignal(AppState& state) {
 
 // Analysis helpers
 
-
-// Slope overload: the signal changes by more than one step per sample.
-bool isSlopeOverload(const AppState& s, std::size_t k) {
-    const double t = (static_cast<double>(k) + 0.5) / s.dmSamplingFrequency;
-    const double slope = std::abs(2.0 * pi * s.dmFrequency * s.dmAmplitude *
-                                  std::cos(2.0 * pi * s.dmFrequency * t));
-    return slope / s.dmSamplingFrequency > s.dmStepSize;
-}
-
 double niceStep(double raw) {
     static const double steps[] = {0.01, 0.02, 0.05, 0.1, 0.2, 0.5,
                                    1.0, 2.0, 5.0, 10.0, 20.0, 50.0};
@@ -172,20 +161,13 @@ void drawPlot(const AppState& state) {
         drawText(label, left - 8 - textWidth(label, 12), y - 7, 12, MUTED);
     }
 
-    // Slope-overload intervals (shaded).
-    int overloadCount = 0;
-    for (std::size_t k = 0; k < n; ++k) {
-        if (!isSlopeOverload(state, k)) continue;
-        ++overloadCount;
-        DrawRectangleRec({left + static_cast<float>(k) * dx, top, dx, bottom - top},
-                         OVERLOAD_TINT);
-    }
+
 
     // Sample instants and time axis.
-    const std::size_t stride = static_cast<std::size_t>(
+        const std::size_t stride = static_cast<std::size_t>(
         std::max(1.0f, std::ceil(46.0f / dx)));
 
-    for (std::size_t k = 0; k <= n; ++k) {
+    for (std::size_t k = 0; k <= n; k++) {
         const float x = left + static_cast<float>(k) * dx;
         DrawLineEx({x, top}, {x, bottom}, 1.0f, SAMPLE_GRID);
         DrawLineEx({x, bottom}, {x, bottom + 5}, 1.0f, MUTED);
@@ -198,7 +180,7 @@ void drawPlot(const AppState& state) {
     drawText("Time (s)", right - textWidth("Time (s)", 12), bottom + 24, 12, MUTED);
 
     // Reconstructed staircase.
-    for (std::size_t k = 0; k < n; ++k) {
+    for (std::size_t k = 0; k < n; k++) {
         const float x1 = left + static_cast<float>(k) * dx;
         const float x2 = x1 + dx;
         const float y = mapY(reconstructed[k]);
@@ -212,7 +194,7 @@ void drawPlot(const AppState& state) {
     // Original signal: dense curve, not a polyline through the samples.
     constexpr int segments = 320;
     Vector2 previous{left, mapY(0.0)};
-    for (int s = 1; s <= segments; ++s) {
+    for (int s = 1; s <= segments; s++) {
         const double fraction = static_cast<double>(s) / segments;
         const double t = duration * fraction;
         const Vector2 point{
@@ -224,7 +206,7 @@ void drawPlot(const AppState& state) {
     }
 
     // Sample dots on the original.
-    for (std::size_t k = 0; k < n; ++k) {
+    for (std::size_t k = 0; k < n; k++) {
         DrawCircleV({left + static_cast<float>(k) * dx, mapY(original[k])},
                     4.0f, ORIGINAL_COLOR);
     }
@@ -232,7 +214,7 @@ void drawPlot(const AppState& state) {
     // Encoded bits aligned with their sample intervals.
     drawText("Bits", plot.x + 12, plot.y + 46, 12, MUTED);
     const std::size_t bitCount = std::min(n, state.dmBits.size());
-    for (std::size_t k = 0; k < bitCount; ++k) {
+    for (std::size_t k = 0; k < bitCount; k++) {
         const bool one = state.dmBits[k] != 0;
         const char* label = one ? "1" : "0";
         const float w = textWidth(label, 15);
@@ -258,27 +240,20 @@ void drawPlot(const AppState& state) {
     DrawCircleV({lx + 14, ly}, 4.0f, ORIGINAL_COLOR);
     legendText("Sample instants");
 
-    if (overloadCount > 0) {
-        DrawRectangleRec({lx, ly - 7, 28, 14}, OVERLOAD_TINT);
-        DrawRectangleLinesEx({lx, ly - 7, 28, 14}, 1.0f, ERROR_COLOR);
-        legendText("Slope overload");
-    }
 
     // Error metrics (reconstructed vs original, per sample).
     double maxError = 0.0;
     double sumError = 0.0;
-    for (std::size_t k = 0; k < n; ++k) {
+    for (std::size_t k = 0; k < n; k++) {
         const double e = std::abs(reconstructed[k] - original[k]);
         maxError = std::max(maxError, e);
         sumError += e;
     }
     const double meanError = sumError / static_cast<double>(n);
 
-    drawText(TextFormat("Max error: %.3f     Mean abs error: %.3f     "
-                        "Slope-overload intervals: %d of %d     Duration: %.3f s",
-                        maxError, meanError, overloadCount,
-                        static_cast<int>(n), duration),
-             left, plot.y + plot.height - 34, 14, MUTED);
+drawText(TextFormat("Max error: %.3f     Mean abs error: %.3f     Duration: %.3f s",
+                    maxError, meanError, duration),
+         left, plot.y + plot.height - 34, 14, MUTED);
 }
 
 } // namespace
@@ -305,7 +280,7 @@ void refreshDeltaModulation(AppState& state) {
 void drawDeltaModulationPanel(AppState& state) {
     drawBoldText("DELTA MODULATION", 45, 104, 17, MUTED);
 
-    // ---- Parameters (editable) ----
+    // Parameters (editable) 
     constexpr float labelY = 135;
     constexpr float rowY = 154;
     constexpr float rowH = 36;
@@ -341,21 +316,10 @@ void drawDeltaModulationPanel(AppState& state) {
     // Recompute whenever a parameter changed (this frame or elsewhere).
     syncSignal(state);
 
-    // Diagnostics 
-    const double requiredStep =
-        state.dmSamplingFrequency > 0.0 ? 2.0 * pi * state.dmAmplitude * state.dmFrequency /state.dmSamplingFrequency: 0.0;
-
-    if (!signalError.empty()) {
-        drawText(signalError.c_str(), 45, 203, 14, ERROR_COLOR);
-    } else if (state.dmStepSize < requiredStep) {
-        drawText(TextFormat("Slope overload: step %.2f is below the minimum %.2f "
-                            "(2*pi*A*f/fs), so the staircase cannot follow the "
-                            "steep parts.",
-                            state.dmStepSize, requiredStep),
-                 45, 203, 14, WARNING_COLOR);
-    } else {
-        drawText(TextFormat("No slope overload: step %.2f >= minimum %.2f. ""Remaining error is granular noise.",state.dmStepSize, requiredStep),45, 203, 14, MUTED);
-    }
+  // Display validation errors, if any.
+if (!signalError.empty()) {
+    drawText(signalError.c_str(), 45, 203, 14, ERROR_COLOR);
+}
 
     //Encoded bits
     drawText("Encoded bits:", 45, 233, 14, MUTED);

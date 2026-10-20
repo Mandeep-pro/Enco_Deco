@@ -59,7 +59,7 @@ void drawEncodingPanel(AppState& state) {
 
 int main() {
     using namespace encodeco;
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Enco_Deco | Signal Lab");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Enco_Deco | A Line encoding and Delta Modulation simulating application");
     SetExitKey(KEY_NULL);
     initializeUI();
     SetTargetFPS(60);
@@ -86,7 +86,7 @@ BeginDrawing();
 ClearBackground(BACKGROUND);
 
 drawBoldText("Enco_Deco", 35, 16, 38, TEXT_PRIMARY);
-drawText("SIGNAL LAB", 37, 60, 13, MUTED);
+drawText("From Mandeep and Vivek", 37, 60, 13, MUTED);
 
 if (button({650, 30, 180, 42}, "Digital Mode",
            !state.deltaModulationMode)) {

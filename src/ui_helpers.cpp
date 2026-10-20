@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <string>
 
+
 namespace encodeco {
 namespace {
 constexpr const char* REGULAR_FONT_PATH = "/usr/share/fonts/google-noto/NotoSans-Regular.ttf";
@@ -310,6 +311,76 @@ void decimalField(int id, Rectangle rect, double& value, double minValue,
         DrawLineEx({tx + width + 2, ty}, {tx + width + 2, ty + fontSize},
                    1.5f, TEXT_PRIMARY);
     }
+}
+
+bool bitStringField(int id, Rectangle rect, std::string& value,
+                    std::size_t maxLength, bool enabled) {
+    if (!enabled && edit.id == id) cancelEdit();
+
+    const bool pressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    const bool inField = CheckCollisionPointRec(GetMousePosition(), rect);
+    if (enabled && pressed && inField && edit.id != id) {
+        commitEdit();
+        edit.id = id;   // focus; the text is edited in place
+    } else if (edit.id == id && pressed && !inField) {
+        commitEdit();
+    }
+
+    bool submitted = false;
+    if (edit.id == id) {
+        int c = GetCharPressed();
+        while (c > 0) {
+            if ((c == '0' || c == '1') && value.size() < maxLength) {
+                value.push_back(static_cast<char>(c));
+            }
+            c = GetCharPressed();
+        }
+
+        const bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+        if (ctrl && IsKeyPressed(KEY_V)) {
+            const char* clip = GetClipboardText();
+            for (const char* p = clip; p != nullptr && *p != '\0'; p++) {
+                if ((*p == '0' || *p == '1') && value.size() < maxLength) {
+                    value.push_back(static_cast<char>(*p));
+                }
+            }
+        }
+
+        if ((IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) &&
+            !value.empty()) {
+            value.pop_back();
+        }
+
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            commitEdit();
+            submitted = true;
+        }
+    }
+
+    const bool focused = edit.id == id;
+    DrawRectangleRounded(rect, 0.18f, 8, enabled ? PANEL : PANEL_HOVER);
+    DrawRectangleRoundedLines(rect, 0.18f, 8, focused ? ACCENT : GRID);
+
+    const bool placeholder = value.empty() && !focused;
+    const std::string text = placeholder ? "e.g. 10110010" : value;
+
+    float fontSize = 18.0f;
+    const float available = rect.width - 24.0f;
+    const float fullWidth = textWidth(text.c_str(), fontSize);
+    if (fullWidth > available) fontSize *= available / fullWidth;
+
+    const float width = textWidth(text.c_str(), fontSize);
+    const float tx = rect.x + 12.0f;
+    const float ty = rect.y + (rect.height - fontSize) / 2.0f;
+    drawText(text.c_str(), tx, ty, fontSize,
+             placeholder ? MUTED : (enabled ? TEXT_PRIMARY : MUTED));
+
+    if (focused && std::fmod(GetTime(), 1.0) < 0.5) {
+        DrawLineEx({tx + width + 2, ty}, {tx + width + 2, ty + fontSize},
+                   1.5f, TEXT_PRIMARY);
+    }
+
+    return submitted;
 }
 
 } // namespace encodeco

@@ -2,7 +2,8 @@
 #define ENCO_DECO_UI_HELPERS_HPP
 
 #include "raylib.h"
-
+#include <cstddef>
+#include <string>
 namespace encodeco {
 
 void initializeUI();
@@ -36,6 +37,12 @@ extern const Color MUTED;
 extern const Color TEXT_PRIMARY;
 extern const Color TEXT_ON_ACCENT;
 extern const Color ERROR_COLOR;
+
+
+// Text box for a string of 0/1 characters; edits `value` live.
+// Returns true on the frame Enter is pressed in the field.
+bool bitStringField(int id, Rectangle rect, std::string& value,
+                    std::size_t maxLength, bool enabled = true);
 
 } // namespace encodeco
 

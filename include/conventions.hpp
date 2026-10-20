@@ -18,7 +18,7 @@ constexpr SignalLevel NEGATIVE_LEVEL = -1;
 constexpr SignalLevel NRZ_L_ONE_LEVEL = POSITIVE_LEVEL;
 constexpr SignalLevel NRZ_L_ZERO_LEVEL = NEGATIVE_LEVEL;
 
-// NRZ-I 0 = no change. 1 = inversion
+// NRZ-I 0 = no change. 1 = inversion. Inherited level is +ve, so first 1 in string is -1.
 constexpr SignalLevel INITIAL_NRZ_I_LEVEL = POSITIVE_LEVEL;
 
 // Manchester : 1 = low to high , 0 is high to low(IEEE 802.3)

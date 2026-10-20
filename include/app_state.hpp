@@ -14,7 +14,7 @@ struct AppState {
 
     int selectedEncoding = 0;
     int sequenceLength = 16;
-    int generationMode = 0; // 0 = random, 1 = planted zero-runs
+    int generationMode = 0; // 0 = random, 1 = planted zero-runs 2 = manual
     int runLength = 4;
     int runCount = 2;
 
@@ -30,7 +30,10 @@ double dmStepSize = 0.2;
 std::vector<double> originalSamples;
 std::vector<double> reconstructedSamples;
 Bits dmBits;
+std::string manualBits; // typed sequence for Manual mode
 };
+
+  
 
 } // namespace encodeco
 

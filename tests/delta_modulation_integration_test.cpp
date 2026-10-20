@@ -16,7 +16,7 @@ int main(){
     
     assert(samples.size() == bits.size() && bits.size() == result.size() && result.size() == 64);
 
-    for (std::size_t i = 0; i < samples.size(); ++i) {
+    for (std::size_t i = 0; i < samples.size(); i++) {
     std::cout << samples[i] << "\t"  << static_cast<int>(bits[i]) << "\t"<< result[i] << '\n';
 }
 
