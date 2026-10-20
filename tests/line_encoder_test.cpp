@@ -38,5 +38,6 @@ int main()
     assert(encodeAMI(empty).empty());
 
     std::cout << "All line encoder tests passed.\n";
+
     return 0;
 }
